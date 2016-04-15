@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Fundamental - Example</title>
+	</head>
+	<body onload = "Initial()">
+		<canvas id="fundi" width = "600" height = "480">
+			something wrong!
+		</canvas>
+		<br />
+		<i>Demo is above this text</i>
+		<script src="app.js">
+		</script>
+		<!-- vertex shader -->
+		<script id="2d-vertex-shader" type="x-shader/x-vertex">
+			attribute vec2 aVertexPosition;
+			attribute vec4 aVertexColor;
+			varying lowp vec4 aFragmentColor;
+			varying lowp vec2 aFragmentPosition;
+			void main() {
+			   gl_Position = vec4(aVertexPosition, 0, 1);
+
+			   aFragmentColor = aVertexColor;
+			   aFragmentPosition = aVertexPosition;
+			}
+		</script>
+		<!-- fragment shader -->
+		<script id="2d-fragment-shader" type="x-shader/x-fragment">
+			precision mediump float;
+			varying lowp vec4 aFragmentColor;
+			varying lowp vec2 aFragmentPosition;
+			uniform float aTime;
+			void main() {
+			  gl_FragColor = vec4(aFragmentColor.r * (cos(aFragmentPosition.x * 4.0 + aTime) + 1.0)*0.5,
+				aFragmentColor.g * (cos(aFragmentPosition.y * 4.0 + aTime) + 1.0)*0.5,
+				aFragmentColor.b * (cos(aFragmentPosition.x * 0.8 + aTime) + 1.0)*0.5,
+				aFragmentColor.a); 
+			}
+		</script>
+	</body>
+</html>
