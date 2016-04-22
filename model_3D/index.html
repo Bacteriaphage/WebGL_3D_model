@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Fundamental - Example</title>
+	</head>
+	<body onload = "Initial()">
+		<canvas id="fundi" width = "600" height = "480">
+			something wrong!
+		</canvas>
+		<br />
+		<i>Demo is above this text</i>
+		<script src="app.js"></script>
+		<script src="matrix.js"></script>
+		<!-- vertex shader -->
+		<script id="2d-vertex-shader" type="x-shader/x-vertex">
+			attribute vec3 aVertexPosition;
+			attribute vec4 aVertexColor;
+			uniform mat4 u_matrix;
+			varying lowp vec4 aFragmentColor;
+			varying lowp vec3 aFragmentPosition;
+			void main() {
+			   gl_Position = vec4(aVertexPosition,1) * u_matrix;
+
+			   aFragmentColor = aVertexColor;
+			   aFragmentPosition = aVertexPosition;
+			}
+		</script>
+		<!-- fragment shader -->
+		<script id="2d-fragment-shader" type="x-shader/x-fragment">
+			precision mediump float;
+			varying lowp vec4 aFragmentColor;
+			varying lowp vec3 aFragmentPosition;
+			uniform float aTime;
+			void main() {
+			
+			  gl_FragColor = vec4(aFragmentColor.r * (cos(aFragmentPosition.x * 4.0 + aTime) + 1.0)*0.5,
+				aFragmentColor.g * (cos(aFragmentPosition.y * 4.0 + aTime) + 1.0)*0.5,
+				aFragmentColor.b * (cos(aFragmentPosition.z * 4.0 + aTime) + 1.0)*0.5,
+				aFragmentColor.a); 
+			
+			//gl_FragColor = aFragmentColor;
+			}
+		</script>
+	</body>
+</html>
