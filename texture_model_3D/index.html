@@ -14,22 +14,19 @@
 		<!-- vertex shader -->
 		<script id="2d-vertex-shader" type="x-shader/x-vertex">
 			attribute vec3 aVertexPosition;
-			attribute vec4 aVertexColor;
+			attribute vec2 a_texcoord;
 			uniform mat4 u_matrix;
-			varying lowp vec4 aFragmentColor;
-			varying lowp vec3 aFragmentPosition;
+			varying lowp vec2 v_texcoord;
 			void main() {
-			   gl_Position = vec4(aVertexPosition,1) * u_matrix;
-
-			   aFragmentColor = aVertexColor;
-			   aFragmentPosition = aVertexPosition;
+				gl_Position = vec4(aVertexPosition,1) * u_matrix;
+				v_texcoord = a_texcoord;
 			}
 		</script>
 		<!-- fragment shader -->
 		<script id="2d-fragment-shader" type="x-shader/x-fragment">
 			precision mediump float;
-			varying lowp vec4 aFragmentColor;
-			varying lowp vec3 aFragmentPosition;
+			varying lowp vec2 v_texcoord;
+			uniform sampler2D u_texture;
 			uniform float aTime;
 			void main() {
 			/*
@@ -38,7 +35,7 @@
 				aFragmentColor.b * (cos(aFragmentPosition.z * 4.0 + aTime) + 1.0)*0.5,
 				aFragmentColor.a); 
 			*/
-			gl_FragColor = aFragmentColor;
+			gl_FragColor = texture2D(u_texture, v_texcoord);
 			}
 		</script>
 	</body>

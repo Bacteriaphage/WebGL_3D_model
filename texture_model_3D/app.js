@@ -2,8 +2,10 @@ var gl; // a global variable for WebGL
 var vertexPositionAttribute;
 var vertexColorAttribute;
 var perspectiveMatrix;
+var texcoordLocation;
 var squareVerticesBuffer;
 var fragColorBuffer;
+var texcoordBuffer;
 var timeUniform;
 var _time = 0.0;
 var matrixLocation;
@@ -40,17 +42,28 @@ function Initial(){
 	vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
 	gl.enableVertexAttribArray(vertexPositionAttribute);
 
-	//give shader a color attribute
-	vertexColorAttribute = gl.getAttribLocation(shaderProgram, "aVertexColor");
-	gl.enableVertexAttribArray(vertexColorAttribute);
-
+	//give shader a texcoord attribute
+	texcoordLocation = gl.getAttribLocation(shaderProgram, "a_texcoord");
+	gl.enableVertexAttribArray(texcoordLocation);
+	setTexcood(gl);
 	//give shader a time uniform
 	timeUniform = gl.getUniformLocation(shaderProgram, "aTime");
 	//give shader a MVP uniform
 	matrixLocation = gl.getUniformLocation(shaderProgram, "u_matrix");
 	
 	initBuffers();
+	//create texture
+	var texture = gl.createTexture();
+	var image = new Image();
+	//image.crossOrigin = "Anonymous"
+	image.src = "http://localhost:8000/Textures.png";
+	image.addEventListener('load', function(){
+		gl.bindTexture(gl.TEXTURE_2D, texture);
+		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+		gl.generateMipmap(gl.TEXTURE_2D);
+	});
 
+	
 	drawScene();
 
 }
@@ -157,63 +170,61 @@ function initBuffers(){
 	0.5, -0.5, -0.5,
 	0.5,  0.5,  0.5,
 	0.5, -0.5,  0.5
-	
 	];
 	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-
-	fragColorBuffer = gl.createBuffer();
-
-	gl.bindBuffer(gl.ARRAY_BUFFER, fragColorBuffer);
-
-	var color = [
-       1.0,  0.5,  0.0,  1.0, 
-	   1.0,  0.5,  0.0,  1.0,
-	   1.0,  0.5,  0.0,  1.0, 
-	   1.0,  0.5,  0.0,  1.0,
-	   1.0,  0.5,  0.0,  1.0, 
-	   1.0,  0.5,  0.0,  1.0,
-	   
-	   0.0,  1.0,  0.5,  1.0,
-	   0.0,  1.0,  0.5,  1.0,
-	   0.0,  1.0,  0.5,  1.0, 
-	   0.0,  1.0,  0.5,  1.0,
-	   0.0,  1.0,  0.5,  1.0, 
-	   0.0,  1.0,  0.5,  1.0,
-	   
-	   0.5,  0.0,  1.0,  1.0, 
-	   0.5,  0.0,  1.0,  1.0,
-	   0.5,  0.0,  1.0,  1.0, 
-	   0.5,  0.0,  1.0,  1.0,
-	   0.5,  0.0,  1.0,  1.0, 
-	   0.5,  0.0,  1.0,  1.0,
-	   
-	   1.0,  1.0,  0.0,  1.0, 
-	   1.0,  1.0,  0.0,  1.0,
-	   1.0,  1.0,  0.0,  1.0, 
-	   1.0,  1.0,  0.0,  1.0,
-	   1.0,  1.0,  0.0,  1.0, 
-	   1.0,  1.0,  0.0,  1.0,
-	   
-	   1.0,  0.0,  1.0,  1.0, 
-	   1.0,  0.0,  1.0,  1.0,
-	   1.0,  0.0,  1.0,  1.0, 
-	   1.0,  0.0,  1.0,  1.0,
-	   1.0,  0.0,  1.0,  1.0, 
-	   1.0,  0.0,  1.0,  1.0,
-	   
-	   0.0,  1.0,  1.0,  1.0, 
-	   0.0,  1.0,  1.0,  1.0,
-	   0.0,  1.0,  1.0,  1.0, 
-	   0.0,  1.0,  1.0,  1.0,
-	   0.0,  1.0,  1.0,  1.0, 
-	   0.0,  1.0,  1.0,  1.0
-	   
-	];
-
-	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(color), gl.STATIC_DRAW);
-
 	
 }
+//set texture
+function setTexcood(gl){
+	texcoordBuffer = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER, texcoordBuffer);
+	var coordinate = [
+	//front
+	0.1875, 0,
+	0.125,  0,
+	0.1875, 0.0625,
+	0.125,  0.0625,
+	0.125,  0,
+	0.1875, 0.0625,
+	//bottom
+	0,      0,
+	0.0625, 0,
+	0.0625, 0.0625,
+	0.0625, 0.0625,
+	0,      0,
+	0,      0.0625,
+	//top
+	0.0625, 0.0625,
+	0.125,  0.0625,
+	0.125,  0.125,
+	0.125,  0.125,
+	0.0625, 0.0625,
+	0.0625, 0.125,
+	//back
+	0.1875, 0,
+	0.125,  0,
+	0.1875, 0.0625,
+	0.125,  0.0625,
+	0.125,  0,
+	0.1875, 0.0625,
+	//left
+	0.1875, 0,
+	0.125,  0,
+	0.125,  0.0625,
+	0.125,  0.0625,
+	0.1875, 0,
+	0.1875, 0.0625,
+	//right
+	0.125,  0,
+	0.1875, 0,
+	0.1875, 0.0625,
+	0.1875, 0.0625,
+	0.125,  0,
+	0.125,  0.0625
+	]
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(coordinate), gl.STATIC_DRAW);
+}
+
 
 function drawScene(){
 
@@ -222,10 +233,10 @@ function drawScene(){
 	gl.bindBuffer(gl.ARRAY_BUFFER, squareVerticesBuffer);
 
 	gl.vertexAttribPointer(vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
-
-	gl.bindBuffer(gl.ARRAY_BUFFER, fragColorBuffer);
-
-	gl.vertexAttribPointer(vertexColorAttribute, 4, gl.FLOAT, false, 0, 0);
+	
+	gl.bindBuffer(gl.ARRAY_BUFFER, texcoordBuffer);
+	
+	gl.vertexAttribPointer(texcoordLocation, 2, gl.FLOAT, false, 0, 0);
 
  	requestAnimationFrame(render);
 
@@ -243,9 +254,9 @@ function render(){
 	  make2DProjection(600, 480, 400);
 	var translationMatrix =
 	  makeTranslation(0, 0, 0);
-	var rotationXMatrix = makeXRotation(_time);
+	var rotationXMatrix = makeXRotation(0.5);
 	var rotationYMatrix = makeYRotation(_time);
-	var rotationZMatrix = makeZRotation(_time);
+	var rotationZMatrix = makeZRotation(0.5);
 	var scaleMatrix = makeScale(1, 1, 1);
 
 	// Multiply the matrices.
