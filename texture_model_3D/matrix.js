@@ -1,71 +1,142 @@
 //all funtion in this file need the original matrix on the left
 //reference https://webglfundamentals.org/webgl/lessons/webgl-3d-orthographic.html
 
-//translation
-function makeTranslation(tx, ty, tz){
-	return [1,  0,  0,  tx,
-			0,  1,  0,  ty,
-			0,  0,  1,  tz,
-			0,  0,  0,  1];
-}
+//Model Matrix
+var model = {
+	//translation
+	makeTranslation : function(tx, ty, tz){
+		return [1,  0,  0,  0,
+				0,  1,  0,  0,
+				0,  0,  1,  0,
+				tx, ty, tz, 1];
+	},
 
-//rotate parameter is angle
-function makeXRotation(angleInRadians){
-  var c = Math.cos(angleInRadians);
-  var s = Math.sin(angleInRadians);
+	//rotation parameter is angle
+	makeXRotation : function(angleInRadians){
+		var c = Math.cos(angleInRadians);
+		var s = Math.sin(angleInRadians);
+	 
+		return [
+		1, 0, 0, 0,
+		0, c, s, 0,
+		0, -s, c, 0,
+		0, 0, 0, 1
+		];
+	},
+
+	makeYRotation : function(angleInRadians) {
+		var c = Math.cos(angleInRadians);
+		var s = Math.sin(angleInRadians);
+	 
+	    return [
+		c, 0, -s, 0,
+		0, 1, 0, 0,
+		s, 0, c, 0,
+		0, 0, 0, 1
+		];
+	},
+	 
+	makeZRotation : function(angleInRadians) {
+		var c = Math.cos(angleInRadians);
+		var s = Math.sin(angleInRadians);
+	 
+		return [
+		 c, s, 0, 0,
+		 -s, c, 0, 0,
+		 0, 0, 1, 0,
+		 0, 0, 0, 1,
+		];
+	},
+	//scaling
+	makeScale : function(sx, sy, sz) {
+		return [
+		sx, 0,  0,  0,
+		0, sy,  0,  0,
+		0,  0, sz,  0,
+		0,  0,  0,  1,
+		];
+	}
+}
+//Projection Matrix
+//this make eye at(0,0,0) and look -Z, near and far [1, INF];
+//need View matrix to build correct camera;
+function make2DProjection(fieldOfViewInRadians, aspect, near, far) {
+  var f = Math.tan(Math.PI * 0.5 - 0.5 * fieldOfViewInRadians);
+  var rangeInv = 1.0 / (near - far);
  
   return [
-    1, 0, 0, 0,
-    0, c, -s, 0,
-    0, s, c, 0,
-    0, 0, 0, 1
-  ];
-}
-
-function makeYRotation(angleInRadians) {
-  var c = Math.cos(angleInRadians);
-  var s = Math.sin(angleInRadians);
- 
-  return [
-    c, 0, s, 0,
-    0, 1, 0, 0,
-    -s, 0, c, 0,
-    0, 0, 0, 1
+    f / aspect, 0, 0, 0,
+    0, f, 0, 0,
+    0, 0, (near + far) * rangeInv, -1,
+    0, 0, near * far * rangeInv * 2, 0
   ];
 };
- 
-function makeZRotation(angleInRadians) {
-  var c = Math.cos(angleInRadians);
-  var s = Math.sin(angleInRadians);
- 
-  return [
-     c, -s, 0, 0,
-     s, c, 0, 0,
-     0, 0, 1, 0,
-     0, 0, 0, 1,
-  ];
-}
-//scaling
-function makeScale(sx, sy, sz) {
-  return [
-    sx, 0,  0,  0,
-    0, sy,  0,  0,
-    0,  0, sz,  0,
-    0,  0,  0,  1,
-  ];
-}
 
-//2D projection
-function make2DProjection(width, height, depth) {
-  // Note: This matrix flips the Y axis so 0 is at the top.
-  return [
-     2 / width, 0, 0, -1,
-     0, -2 / height, 0, 1,
-     0, 0, 2 / depth, 0,
-     0, 0, 0, 1,
-  ];
-}
 
+//View Matrix
+var view = {
+	//translation
+	makeTranslation : function(tx, ty, tz){
+		return [1,  0,  0,  0,
+				0,  1,  0,  0,
+				0,  0,  1,  0,
+				-tx, -ty, -tz, 1];
+	},
+
+	//rotation parameter is angle
+	makeXRotation : function(angleInRadians){
+		var c = Math.cos(-angleInRadians);
+		var s = Math.sin(-angleInRadians);
+	 
+		return [
+		1, 0, 0, 0,
+		0, c, s, 0,
+		0, -s, c, 0,
+		0, 0, 0, 1
+		];
+	},
+
+	makeYRotation : function(angleInRadians) {
+		var c = Math.cos(-angleInRadians);
+		var s = Math.sin(-angleInRadians);
+	 
+	    return [
+		c, 0, -s, 0,
+		0, 1, 0, 0,
+		s, 0, c, 0,
+		0, 0, 0, 1
+		];
+	},
+	 
+	makeZRotation : function(angleInRadians) {
+		var c = Math.cos(-angleInRadians);
+		var s = Math.sin(-angleInRadians);
+	 
+		return [
+		 c, s, 0, 0,
+		 -s, c, 0, 0,
+		 0, 0, 1, 0,
+		 0, 0, 0, 1,
+		];
+	},
+	//scaling
+	makeScale : function(sx, sy, sz) {
+		return [
+		-sx, 0,  0,  0,
+		0, -sy,  0,  0,
+		0,  0, -sz,  0,
+		0,  0,  0,  1,
+		];
+	}
+}
+function identity(){
+	return [
+	1, 0, 0, 0,
+	0, 1, 0, 0,
+	0, 0, 1, 0,
+	0, 0, 0, 1
+	];
+}
 //reference https://github.com/toji/gl-matrix/blob/master/src/gl-matrix/mat4.js
 function matrixMultiply(b,a){
     var a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3],

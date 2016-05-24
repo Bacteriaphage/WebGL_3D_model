@@ -18,7 +18,7 @@
 			varying lowp vec4 aFragmentColor;
 			varying lowp vec2 aFragmentPosition;
 			void main() {
-			   gl_Position = vec4(aVertexPosition, 0, 1);
+			   gl_Position = vec4(aVertexPosition * 0.5, 0, 1);
 
 			   aFragmentColor = aVertexColor;
 			   aFragmentPosition = aVertexPosition;
@@ -31,10 +31,11 @@
 			varying lowp vec2 aFragmentPosition;
 			uniform float aTime;
 			void main() {
-			  gl_FragColor = vec4(aFragmentColor.r * (cos(aFragmentPosition.x * 4.0 + aTime) + 1.0)*0.5,
-				aFragmentColor.g * (cos(aFragmentPosition.y * 4.0 + aTime) + 1.0)*0.5,
-				aFragmentColor.b * (cos(aFragmentPosition.x * 0.8 + aTime) + 1.0)*0.5,
-				aFragmentColor.a); 
+			//	gl_FragColor = vec4(aFragmentColor.r * (cos(aFragmentPosition.x * 4.0 + aTime) + 1.0)*0.5,
+			//	aFragmentColor.g * (cos(aFragmentPosition.y * 4.0 + aTime) + 1.0)*0.5,
+			//	aFragmentColor.b * (cos(aFragmentPosition.x * 0.8 + aTime) + 1.0)*0.5,
+			//	aFragmentColor.a); 
+				gl_FragColor = vec4(0.5, 0.5, 1, 1);
 			}
 		</script>
 	</body>

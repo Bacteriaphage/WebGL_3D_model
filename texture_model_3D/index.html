@@ -9,6 +9,11 @@
 		</canvas>
 		<br />
 		<i>Demo is above this text</i>
+		<div id = "angleMonitor">
+			<div id = "xAngle"></div>
+			<div id = "yAngle"></div>
+			<div id = "zAngle"></div>
+		</div>
 		<script src="app.js"></script>
 		<script src="matrix.js"></script>
 		<!-- vertex shader -->
@@ -18,7 +23,7 @@
 			uniform mat4 u_matrix;
 			varying lowp vec2 v_texcoord;
 			void main() {
-				gl_Position = vec4(aVertexPosition,1) * u_matrix;
+				gl_Position = u_matrix * vec4(aVertexPosition,1);
 				v_texcoord = a_texcoord;
 			}
 		</script>
@@ -35,7 +40,7 @@
 				aFragmentColor.b * (cos(aFragmentPosition.z * 4.0 + aTime) + 1.0)*0.5,
 				aFragmentColor.a); 
 			*/
-			gl_FragColor = texture2D(u_texture, v_texcoord);
+			gl_FragColor = texture2D(u_texture, v_texcoord);  //use texture to display!
 			}
 		</script>
 	</body>

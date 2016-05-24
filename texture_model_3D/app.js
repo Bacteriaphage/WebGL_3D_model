@@ -9,11 +9,11 @@ var texcoordBuffer;
 var timeUniform;
 var _time = 0.0;
 var matrixLocation;
-
+var canvas = document.getElementById("fundi");
 function Initial(){
 	console.log("works well");
 
-	var canvas = document.getElementById("fundi");
+	
 	gl = initWebGL(canvas);
 	
 	if(gl){
@@ -56,7 +56,7 @@ function Initial(){
 	var texture = gl.createTexture();
 	var image = new Image();
 	//image.crossOrigin = "Anonymous"
-	image.src = "http://localhost:8000/Textures.png";
+	image.src = "http://localhost:8000/Textures.png";                                    //need use "python -m SimpleHTTPServer" to open a local server and let js get the png from http
 	image.addEventListener('load', function(){
 		gl.bindTexture(gl.TEXTURE_2D, texture);
 		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
@@ -129,47 +129,47 @@ function initBuffers(){
 
 	var vertices = [
 	//front
-    0.5,  0.5,  0.5,
-    -0.5, 0.5,  0.5,
-    0.5,  -0.5, 0.5,
-    -0.5, -0.5, 0.5,
-    -0.5, 0.5,  0.5,
-    0.5,  -0.5, 0.5,
+    0.1,  0.1,  0.1,
+    -0.1, 0.1,  0.1,
+    0.1,  -0.1, 0.1,
+    -0.1, -0.1, 0.1,
+    -0.1, 0.1,  0.1,
+    0.1,  -0.1, 0.1,
 	//bottom
-	-0.5, -0.5, 0.5,
-	0.5,  -0.5, 0.5,
-	0.5,  -0.5,-0.5,
-	0.5,  -0.5,-0.5,
-	-0.5, -0.5, 0.5,
-	-0.5, -0.5,-0.5,
+	-0.1, -0.1, 0.1,
+	0.1,  -0.1, 0.1,
+	0.1,  -0.1,-0.1,
+	0.1,  -0.1,-0.1,
+	-0.1, -0.1, 0.1,
+	-0.1, -0.1,-0.1,
 	//top
-	-0.5,  0.5, 0.5,
-	0.5,   0.5, 0.5,
-	0.5,   0.5,-0.5,
-	0.5,   0.5,-0.5,
-	-0.5,  0.5, 0.5,
-	-0.5,  0.5,-0.5,
+	-0.1,  0.1, 0.1,
+	0.1,   0.1, 0.1,
+	0.1,   0.1,-0.1,
+	0.1,   0.1,-0.1,
+	-0.1,  0.1, 0.1,
+	-0.1,  0.1,-0.1,
 	//back
-	0.5,  0.5, -0.5,
-    -0.5, 0.5, -0.5,
-    0.5,  -0.5,-0.5,
-    -0.5, -0.5,-0.5,
-    -0.5, 0.5, -0.5,
-    0.5,  -0.5,-0.5,
+	0.1,  0.1, -0.1,
+    -0.1, 0.1, -0.1,
+    0.1,  -0.1,-0.1,
+    -0.1, -0.1,-0.1,
+    -0.1, 0.1, -0.1,
+    0.1,  -0.1,-0.1,
 	//left
-	-0.5,  0.5, 0.5,
-	-0.5,  0.5,-0.5,
-	-0.5, -0.5,-0.5,
-	-0.5, -0.5,-0.5,
-	-0.5,  0.5, 0.5,
-	-0.5, -0.5, 0.5,
+	-0.1,  0.1, 0.1,
+	-0.1,  0.1,-0.1,
+	-0.1, -0.1,-0.1,
+	-0.1, -0.1,-0.1,
+	-0.1,  0.1, 0.1,
+	-0.1, -0.1, 0.1,
 	//right
-	0.5,  0.5,  0.5,
-	0.5,  0.5, -0.5,
-	0.5, -0.5, -0.5,
-	0.5, -0.5, -0.5,
-	0.5,  0.5,  0.5,
-	0.5, -0.5,  0.5
+	0.1,  0.1,  0.1,
+	0.1,  0.1, -0.1,
+	0.1, -0.1, -0.1,
+	0.1, -0.1, -0.1,
+	0.1,  0.1,  0.1,
+	0.1, -0.1,  0.1
 	];
 	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
 	
@@ -249,25 +249,60 @@ function render(){
 	gl.uniform1f(timeUniform, _time);
 
 	_time = _time + 0.01;
-
+	// projection
 	var projectionMatrix =
-	  make2DProjection(600, 480, 400);
+	  make2DProjection(Math.PI * 108/180, 600/480, 0.1, 10.0);
+	// modeling
 	var translationMatrix =
-	  makeTranslation(0, 0, 0);
-	var rotationXMatrix = makeXRotation(0.5);
-	var rotationYMatrix = makeYRotation(_time);
-	var rotationZMatrix = makeZRotation(0.5);
-	var scaleMatrix = makeScale(1, 1, 1);
-
+	  model.makeTranslation(0, 0, 0);
+	var rotationXMatrix = model.makeXRotation(0);
+	var rotationYMatrix = model.makeYRotation(_time);
+	var rotationZMatrix = model.makeZRotation(0);
+	var scaleMatrix = model.makeScale(1.0, 1.0, 1.0);
+	// viewing
+	var view_translationMatrix = view.makeTranslation(0, 0.2, 0.5);
+	var view_rotationXMatrix = view.makeXRotation(-Math.PI * 20/ 180);
+	var view_rotationYMatrix = view.makeYRotation(0);
+	var view_rotationZMatrix = view.makeZRotation(0);
+	// identity matrix
+	var matrix = identity();
+	
 	// Multiply the matrices.
-	var matrix = matrixMultiply(scaleMatrix, rotationZMatrix);
-	matrix = matrixMultiply(matrix, rotationYMatrix);
+	// model * view * projection * vec
+	// model
+	matrix = matrixMultiply(matrix, scaleMatrix);
+	matrix = matrixMultiply(matrix, rotationYMatrix);	
 	matrix = matrixMultiply(matrix, rotationXMatrix);
+	matrix = matrixMultiply(matrix, rotationZMatrix);
 	matrix = matrixMultiply(matrix, translationMatrix);
-//	matrix = matrixMultiply(matrix, projectionMatrix);
+
+	// view
+	matrix = matrixMultiply(matrix, view_rotationXMatrix);
+	matrix = matrixMultiply(matrix, view_rotationZMatrix);
+	matrix = matrixMultiply(matrix, view_translationMatrix);
+	matrix = matrixMultiply(matrix, view_rotationYMatrix);
+	
+	// projection
+	matrix = matrixMultiply(matrix, projectionMatrix);
 
 	// Set the matrix.
 	gl.uniformMatrix4fv(matrixLocation, false, matrix);
-	gl.drawArrays(gl.TRIANGLES , 0, 36);	
+	gl.drawArrays(gl.TRIANGLES , 0, 36);
+	var xRotate = document.getElementById("xAngle");
+	xRotate.innerHTML = "x: " + getXAngle();
+	var yRotate = document.getElementById("yAngle");
+	yRotate.innerHTML = "y: " + getYAngle();
+	var zRotate = document.getElementById("zAngle");
+	zRotate.innerHTML = "z: " + getZAngle();
+	
 	requestAnimationFrame(render);
+}
+function getXAngle(){
+	return 0.5 - (_time / 3.1415) * 0.5;
+}
+function getYAngle(){
+	return _time;
+}
+function getZAngle(){
+	return -((_time / 3.1415)) * 0.5;
 }
