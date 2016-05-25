@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>library experiment</title>
+<script src="app.js"></script>
+<script src="matrix.js"></script>
+<script src="objectGenerator.js"></script>
+<script src="setBuffer.js"></script>
+<script src="shaderLoad.js"></script>
+</head>
+
+<body onload = "Main()">
+<canvas id = "mainWindow" height = "600" width = "800">
+the browser do not support WebGL!
+</canvas>
+<div id="point"></div>
+<!--vertex shader-->
+<script id = "vertex_shader" type = "x-shader/x-vertex">
+	attribute vec3 aVertexPosition;
+	attribute vec4 aVertexColor;
+	uniform mat4 u_matrix;
+	varying lowp vec4 aFragmentColor;
+	void main() {
+		gl_Position = u_matrix * vec4(aVertexPosition,1);
+		aFragmentColor = aVertexColor;
+	}
+</script>
+
+<!--fragment shader-->
+<script id = "fragment_shader" type = "x-shader/x-fragment">
+	varying lowp vec4 aFragmentColor;
+	void main(){
+		gl_FragColor = aFragmentColor;
+	}
+</script>
+</body>
+</html>
