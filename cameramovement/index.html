@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>library experiment</title>
+<script src="app.js"></script>
+<script src="matrix.js"></script>
+<script src="objectGenerator.js"></script>
+<script src="setBuffer.js"></script>
+<script src="shaderLoad.js"></script>
+<script src="camera.js"></script>
+<style>
+.control_panal {
+position: absolute;
+top: 10px;
+left: 10px;
+z-index: 2;
+color: gray;
+font-family: san-serif;
+background-color: rgba(0.0, 0.0, 0.0, 0.5);
+border-radius: 10px;
+padding: 10px;
+}
+div.title{
+font-weight: bold;
+}
+</style>
+</head>
+
+<body onload = "Main()">
+<canvas id = "mainWindow" height = "600" width = "800">
+the browser do not support WebGL!
+</canvas>
+<div class="control_panal">
+<div class = "title" >Display Mode</div>
+<div id="building" style = "color: red">3D Model</div>
+<div id="framework">Frame</div>
+<div class ="title">Camera Setting</div>
+<div id="rotating" style = "color: red">Auto Camera</div>
+<div id="free">Free Camera</div>
+</div>
+<!--vertex shader-->
+<script id = "vertex_shader" type = "x-shader/x-vertex">
+	attribute vec3 aVertexPosition;
+	attribute vec4 aVertexColor;
+	uniform mat4 u_matrix;
+	varying lowp vec4 aFragmentColor;
+	void main() {
+		gl_Position = u_matrix * vec4(aVertexPosition,1);
+		aFragmentColor = aVertexColor;
+	}
+</script>
+
+<!--fragment shader-->
+<script id = "fragment_shader" type = "x-shader/x-fragment">
+	varying lowp vec4 aFragmentColor;
+	void main(){
+		gl_FragColor = aFragmentColor;
+	}
+</script>
+</body>
+</html>
