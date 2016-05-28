@@ -11,6 +11,7 @@ var framework = new Array();
 var framecolor = new Array();
 var VP, M;
 var time = 0;
+var rotating = 1;
 function Main(){
 	var canvas = document.getElementById("mainWindow");
 	console.log("load successfully!");
@@ -57,7 +58,8 @@ function Main(){
 	
 	document.getElementById("building").addEventListener("click", draw3D);
 	document.getElementById("framework").addEventListener("click", drawF);
-	
+	document.getElementById("rotating").addEventListener("click", autoCamera);
+	document.getElementById("free").addEventListener("click", freeCamera);
 	draw3Dmodel();
 }
 
@@ -74,6 +76,7 @@ function initWebGL(canvas){
 
 	return gl;
 }
+
 function draw3D(){
 	if(document.getElementById("building").style.color == "red") return;
 	document.getElementById("building").style.color = "red";
@@ -99,7 +102,7 @@ function draw3Dmodel(){
 	M.translationMatrix =
 	  model.makeTranslation(0.0, 0.0, 0.0);
 	M.rotationXMatrix = model.makeXRotation(0);
-	M.rotationYMatrix = model.makeYRotation(Math.PI * time / 180);
+	M.rotationYMatrix = model.makeYRotation(rotating * Math.PI * time / 180);
 	M.rotationZMatrix = model.makeZRotation(0);
 	M.scaleMatrix = model.makeScale(1.0, 1.0, 1.0);
 	var matrix = MVPmatrix(M, VP);
@@ -126,7 +129,7 @@ function drawFrame(){
 	M.translationMatrix =
 	  model.makeTranslation(0.0, 0.0, 0.0);
 	M.rotationXMatrix = model.makeXRotation(0);
-	M.rotationYMatrix = model.makeYRotation(Math.PI * time / 180);
+	M.rotationYMatrix = model.makeYRotation(rotating * Math.PI * time / 180);
 	M.rotationZMatrix = model.makeZRotation(0);
 	M.scaleMatrix = model.makeScale(1.0, 1.0, 1.0);
 	var matrix = MVPmatrix(M, VP);

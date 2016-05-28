@@ -185,9 +185,9 @@ function MVPmatrix(M, VP){
 
 
 	// view
+	matrix = matrixMultiply(matrix, VP.view_translationMatrix);
 	matrix = matrixMultiply(matrix, VP.view_rotationXMatrix);
 	matrix = matrixMultiply(matrix, VP.view_rotationZMatrix);
-	matrix = matrixMultiply(matrix, VP.view_translationMatrix);
 	matrix = matrixMultiply(matrix, VP.view_rotationYMatrix);
 	
 	// projection
