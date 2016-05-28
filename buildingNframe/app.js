@@ -36,9 +36,15 @@ function Main(){
 	}
 	gl.useProgram(shaderProgram);
 	
-	objects[0] = generateObj.cuboid(-0.1, 0.0, 0.1, 0.2, 0.2, 0.4);
-	framework[0] = generateObj.framework(-0.1, 0.0, 0.1, 0.2, 0.2, 0.4);
+	objects[0] = generateObj.cuboid(-0.2, 0.0, 0.2, 0.4, 0.4, 0.9);
+	objects[1] = generateObj.cuboid(-0.2, 0.0, 0.1, 0.2, 0.2, 0.2);
+	objects[2] = generateObj.cuboid(-0.2, 0.3, 0.2, 0.4, 0.4, 0.01);
+	objects[3] = generateObj.cuboid(-0.2, 0.6, 0.2, 0.4, 0.4, 0.01);
+	framework[0] = generateObj.framework(-0.2, 0.0, 0.2, 0.4, 0.4, 0.9);
 	color[0] = generateColor.cuboid(1.0, 0.5, 0.4, 1.0);
+	color[1] = generateColor.cuboid(0.5, 0.8, 0.2, 1.0);
+	color[2] = generateColor.cuboid(1.0, 1.0, 1.0, 1.0);
+	color[3] = generateColor.cuboid(1.0, 1.0, 1.0, 1.0);
 	framecolor[0] = generateColor.framework(1.0, 1,0, 1.0, 1.0);
 	vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
 //	gl.enableVertexAttribArray(vertexPositionAttribute);
@@ -66,13 +72,16 @@ function initWebGL(canvas){
 	return gl;
 }
 function draw3D(){
+	if(document.getElementById("building").style.color == "red") return;
 	document.getElementById("building").style.color = "red";
 	document.getElementById("framework").style.color = "black";
 	draw3Dmodel();
 }
 function drawF(){
+	if(document.getElementById("framework").style.color == "red") return;
 	document.getElementById("building").style.color = "black";
 	document.getElementById("framework").style.color = "red";
+	
 	drawFrame();
 }
 function draw3Dmodel(){
@@ -81,11 +90,11 @@ function draw3Dmodel(){
 	if(time == 360) time = 0;
 	//VP
 	var VP = {
-		view_translationMatrix : view.makeTranslation(0.0, 0.3, 1.0),
+		view_translationMatrix : view.makeTranslation(0.0, 0.5, 1.0),
 		view_rotationXMatrix : view.makeXRotation(-Math.PI * 30 / 180),
 		view_rotationYMatrix : view.makeYRotation(0),
 		view_rotationZMatrix : view.makeZRotation(0),
-		projectionMatrix : make2DProjection(Math.PI * 60/180, 600/480, 0.1, 50.0)
+		projectionMatrix : make2DProjection(Math.PI * 90/180, 600/480, 0.1, 50.0)
 	};
 	var M = {
 		translationMatrix : null,
@@ -110,11 +119,11 @@ function draw3Dmodel(){
 	gl.uniformMatrix4fv(MVPuniform, false, matrix);
 	
 	gl.drawArrays(gl.TRIANGLES, 0, 36);
+	
 	if(document.getElementById("building").style.color=="black"){
 		console.log("exit 3D");
 		return;
 	} 
-	document.getElementById("time").innerHTML = time+10000000;
 	requestAnimationFrame(draw3Dmodel);
 }
 function drawFrame(){
@@ -123,11 +132,11 @@ function drawFrame(){
 	if(time == 360) time = 0;
 	//VP
 	var VP = {
-		view_translationMatrix : view.makeTranslation(0.0, 0.3, 1.0),
+		view_translationMatrix : view.makeTranslation(0.0, 0.5, 1.0),
 		view_rotationXMatrix : view.makeXRotation(-Math.PI * 30 / 180),
 		view_rotationYMatrix : view.makeYRotation(0),
 		view_rotationZMatrix : view.makeZRotation(0),
-		projectionMatrix : make2DProjection(Math.PI * 60/180, 600/480, 0.1, 50.0)
+		projectionMatrix : make2DProjection(Math.PI * 90/180, 600/480, 0.1, 50.0)
 	};
 	var M = {
 		translationMatrix : null,
@@ -152,7 +161,32 @@ function drawFrame(){
 	gl.uniformMatrix4fv(MVPuniform, false, matrix);
 	
 	gl.drawArrays(gl.LINES, 0, 24);
+	
+	verticeBuffer = setBuffer(gl, objects[1]);
+	colorBuffer = setBuffer(gl, color[1]);
+	setPointAttribute(gl, vertexPositionAttribute, verticeBuffer);
+	setColorAttribute(gl, vertexColorAttribute, colorBuffer);
+	
+	gl.uniformMatrix4fv(MVPuniform, false, matrix);
+	
+	gl.drawArrays(gl.TRIANGLES, 0, 36);
+	verticeBuffer = setBuffer(gl, objects[2]);
+	colorBuffer = setBuffer(gl, color[2]);
+	setPointAttribute(gl, vertexPositionAttribute, verticeBuffer);
+	setColorAttribute(gl, vertexColorAttribute, colorBuffer);
+	
+	gl.uniformMatrix4fv(MVPuniform, false, matrix);
+	
+	gl.drawArrays(gl.TRIANGLES, 0, 36);
+	
+	verticeBuffer = setBuffer(gl, objects[3]);
+	colorBuffer = setBuffer(gl, color[3]);
+	setPointAttribute(gl, vertexPositionAttribute, verticeBuffer);
+	setColorAttribute(gl, vertexColorAttribute, colorBuffer);
+	
+	gl.uniformMatrix4fv(MVPuniform, false, matrix);
+	
+	gl.drawArrays(gl.TRIANGLES, 0, 36);
 	if(document.getElementById("framework").style.color=="black") return;
-	document.getElementById("time").innerHTML = time;
 	requestAnimationFrame(drawFrame);
 }
