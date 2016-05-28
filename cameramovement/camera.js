@@ -1,7 +1,17 @@
 var originX, originY;
-var degreeX = 10, degreeY = 0;
+var degreeX = 0, degreeY = 0;
 var cameraRXZ = 0; cameraRYZ = 0;
-var directionVec = [0, 0, -1];
+var currentX = 0, currentY = 0;
+var directionVec = {
+	x : 0,
+	y : 0,
+	z : -1
+};
+var cameraCoor = {
+	x : 0.0,
+	y : 0.5,
+	z : 1.0
+};
 function initCamera(){
 	VP = {
 		view_translationMatrix : view.makeTranslation(0.0, 0.5, 1.0),
@@ -34,6 +44,7 @@ function freeCamera(){
 	document.getElementById("mainWindow").addEventListener("mousedown", startMove);
 	console.log("push done");
 	document.getElementById("mainWindow").addEventListener("mouseup", endMove);
+	document.getElementById("mainWindow").addEventListener("keydown", cameraMove);
 }
 
 function startMove(event){
@@ -41,26 +52,59 @@ function startMove(event){
 	originY = event.y;
 	console.log("push");
 	document.getElementById("mainWindow").addEventListener("mousemove", cameraRotate);
-	document.getElementById("mainWindow").addEventListener("keydown", cameraMove);
+	
 }
 function endMove(){
 	console.log("leave");
 	document.getElementById("mainWindow").removeEventListener("mousemove",cameraRotate);
-	document.getElementById("mainWindow").removeEventListener("keydown", cameraMove);
-	degreeX = degreeX - cameraRXZ / 2;
-	degreeY = degreeY + cameraRYZ / 2;
+	
+	degreeX = degreeX - cameraRXZ / 4;
+	degreeY = degreeY + cameraRYZ / 4;
 }
 
 function cameraRotate(event){
 	console.log("moving");
 	cameraRYZ = event.x - originX;
 	cameraRXZ = originY - event.y;
-	document.getElementById("cameraX").innerHTML = degreeX - (originY - event.y) / 2;
-	document.getElementById("cameraY").innerHTML = degreeY + (event.x - originX) / 2;
-	VP.view_rotationXMatrix = view.makeXRotation(Math.PI * (degreeX - (originY - event.y) / 2) / 180);
-	VP.view_rotationYMatrix = view.makeYRotation(Math.PI * (degreeY + (event.x - originX) / 2) / 180);
+	
+	VP.view_rotationXMatrix = view.makeXRotation(-Math.PI * (degreeX - (originY - event.y) / 4) / 180 * Math.cos(currentY));
+	VP.view_rotationYMatrix = view.makeYRotation(-Math.PI * (degreeY + (event.x - originX) / 4) / 180);
+	VP.view_rotationZMatrix = view.makeZRotation(-Math.PI * (degreeX - (originY - event.y) / 4) / 180 * Math.sin(currentY));
+	currentX =-Math.PI * (degreeX - (originY - event.y) / 4) / 180;
+	currentY =-Math.PI * (degreeY + (event.x - originX) / 4) / 180;
+	document.getElementById("cameraX").innerHTML = currentX;
+	document.getElementById("cameraY").innerHTML = currentY;
 }
 
 function cameraMove(event){
+	console.log("move");
+	directionVec.x = -Math.sin(currentY)/(Math.sqrt(Math.sin(currentY)*Math.sin(currentY)+Math.sin(currentX)*Math.sin(currentX)+Math.cos(currentY)*Math.cos(currentY)));
+	directionVec.y = Math.sin(currentX)/(Math.sqrt(Math.sin(currentY)*Math.sin(currentY)+Math.sin(currentX)*Math.sin(currentX)+Math.cos(currentY)*Math.cos(currentY)));
+	directionVec.z = -Math.cos(currentY)/(Math.sqrt(Math.sin(currentY)*Math.sin(currentY)+Math.sin(currentX)*Math.sin(currentX)+Math.cos(currentY)*Math.cos(currentY)));
 	
+	if(event.which == 87){
+		cameraCoor.x += directionVec.x / 20;
+		cameraCoor.y += directionVec.y / 20;
+		cameraCoor.z += directionVec.z / 20;
+		VP.view_translationMatrix = view.makeTranslation(cameraCoor.x, cameraCoor.y, cameraCoor.z);
+	}
+	else if(event.which == 83){
+		cameraCoor.x -= directionVec.x / 20;
+		cameraCoor.y -= directionVec.y / 20;
+		cameraCoor.z -= directionVec.z / 20;
+		VP.view_translationMatrix = view.makeTranslation(cameraCoor.x, cameraCoor.y, cameraCoor.z);
+	}
+	else if(event.which == 65){
+		cameraCoor.x += -Math.sin(currentY + Math.PI / 2)/(Math.sqrt(Math.sin(currentY)*Math.sin(currentY)+Math.cos(currentY)*Math.cos(currentY))) / 20;
+		cameraCoor.z += -Math.cos(currentY + Math.PI / 2)/(Math.sqrt(Math.sin(currentY)*Math.sin(currentY)+Math.cos(currentY)*Math.cos(currentY))) / 20;
+		VP.view_translationMatrix = view.makeTranslation(cameraCoor.x, cameraCoor.y, cameraCoor.z);
+	}
+	else if(event.which == 68){
+		cameraCoor.x += -Math.sin(currentY - Math.PI / 2)/(Math.sqrt(Math.sin(currentY)*Math.sin(currentY)+Math.cos(currentY)*Math.cos(currentY))) / 20;
+		cameraCoor.z += -Math.cos(currentY - Math.PI / 2)/(Math.sqrt(Math.sin(currentY)*Math.sin(currentY)+Math.cos(currentY)*Math.cos(currentY))) / 20;
+		VP.view_translationMatrix = view.makeTranslation(cameraCoor.x, cameraCoor.y, cameraCoor.z);
+		
+	}
+	document.getElementById("cameraX").innerHTML = currentX;
+	document.getElementById("cameraY").innerHTML = currentY;
 }
