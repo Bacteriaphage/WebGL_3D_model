@@ -69,7 +69,7 @@ function cameraRotate(event){
 	
 	VP.view_rotationXMatrix = view.makeXRotation(-Math.PI * (degreeX - (originY - event.y) / 4) / 180 * Math.cos(currentY));
 	VP.view_rotationYMatrix = view.makeYRotation(-Math.PI * (degreeY + (event.x - originX) / 4) / 180);
-	VP.view_rotationZMatrix = view.makeZRotation(-Math.PI * (degreeX - (originY - event.y) / 4) / 180 * Math.sin(currentY));
+	VP.view_rotationZMatrix = view.makeZRotation(Math.PI * (degreeX - (originY - event.y) / 4) / 180 * Math.sin(currentY));
 	currentX =-Math.PI * (degreeX - (originY - event.y) / 4) / 180;
 	currentY =-Math.PI * (degreeY + (event.x - originX) / 4) / 180;
 	document.getElementById("cameraX").innerHTML = currentX;
