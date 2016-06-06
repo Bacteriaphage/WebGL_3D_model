@@ -194,3 +194,11 @@ function MVPmatrix(M, VP){
 	matrix = matrixMultiply(matrix, VP.projectionMatrix);
 	return matrix;
 }
+
+function normalize(vector){
+	return [
+	vector[0]/(Math.sqrt(vector[0]*vector[0]+vector[1]*vector[1]+vector[2]*vector[2])),
+	vector[1]/(Math.sqrt(vector[0]*vector[0]+vector[1]*vector[1]+vector[2]*vector[2])),
+	vector[2]/(Math.sqrt(vector[0]*vector[0]+vector[1]*vector[1]+vector[2]*vector[2]))
+	];
+}

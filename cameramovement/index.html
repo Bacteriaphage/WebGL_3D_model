@@ -44,19 +44,28 @@ the browser do not support WebGL!
 <script id = "vertex_shader" type = "x-shader/x-vertex">
 	attribute vec3 aVertexPosition;
 	attribute vec4 aVertexColor;
+	attribute vec3 aVertexNormal;
 	uniform mat4 u_matrix;
 	varying lowp vec4 aFragmentColor;
+	varying lowp vec3 aFragmentNormal;
 	void main() {
 		gl_Position = u_matrix * vec4(aVertexPosition,1);
 		aFragmentColor = aVertexColor;
+		aFragmentNormal = aVertexNormal;
 	}
 </script>
 
 <!--fragment shader-->
 <script id = "fragment_shader" type = "x-shader/x-fragment">
+	precision mediump float;
 	varying lowp vec4 aFragmentColor;
+	varying lowp vec3 aFragmentNormal;
+	uniform vec3 reverseLightDirection;
 	void main(){
+		vec3 normal = normalize(aFragmentNormal);
+		float light = dot(normal, reverseLightDirection);
 		gl_FragColor = aFragmentColor;
+		gl_FragColor.rgb *= light;
 	}
 </script>
 </body>
