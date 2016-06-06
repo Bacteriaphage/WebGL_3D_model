@@ -11,6 +11,8 @@ var normalBuffer;
 
 var MVPuniform;
 var reverseLightDirectionLocation;
+var lightingLocation;
+
 var objects = new Array();
 var color = new Array();
 var normal = new Array();
@@ -21,6 +23,7 @@ var VP, M;
 
 var time = 0;
 var rotating = 1;
+var light = 0;
 function Main(){
 	var canvas = document.getElementById("mainWindow");
 	console.log("load successfully!");
@@ -73,10 +76,15 @@ function Main(){
 	
 	reverseLightDirectionLocation = gl.getUniformLocation(shaderProgram, "reverseLightDirection");
 	
+	lightingLocation = gl.getUniformLocation(shaderProgram, "lightMode");
+	
 	document.getElementById("building").addEventListener("click", draw3D);
 	document.getElementById("framework").addEventListener("click", drawF);
 	document.getElementById("rotating").addEventListener("click", autoCamera);
 	document.getElementById("free").addEventListener("click", freeCamera);
+	document.getElementById("no_light").addEventListener("click", noLight);
+	document.getElementById("direct_light").addEventListener("click", directLight);
+	document.getElementById("point_light").addEventListener("click", pointLight);
 	draw3Dmodel();
 }
 
@@ -93,7 +101,27 @@ function initWebGL(canvas){
 
 	return gl;
 }
-
+function noLight(){
+	if(document.getElementById("no_light").style.color == "red") return;
+	document.getElementById("no_light").style.color = "red";
+	document.getElementById("direct_light").style.color = "gray";
+	document.getElementById("point_light").style.color = "gray";
+	light = 0;
+}
+function directLight(){
+	if(document.getElementById("direct_light").style.color == "red") return;
+	document.getElementById("direct_light").style.color = "red";
+	document.getElementById("no_light").style.color = "gray";
+	document.getElementById("point_light").style.color = "gray";
+	light = 1;
+}
+function pointLight(){
+	if(document.getElementById("point_light").style.color == "red") return;
+	document.getElementById("point_light").style.color = "red";
+	document.getElementById("no_light").style.color = "gray";
+	document.getElementById("direct_light").style.color = "gray";
+	light = 2;
+}
 function draw3D(){
 	if(document.getElementById("building").style.color == "red") return;
 	document.getElementById("building").style.color = "red";
@@ -126,6 +154,7 @@ function draw3Dmodel(){
 	M.scaleMatrix = model.makeScale(1.0, 1.0, 1.0);
 	var matrix = MVPmatrix(M, VP);
 	gl.uniformMatrix4fv(MVPuniform, false, matrix);
+	gl.uniform1i(lightingLocation, light);
 	gl.uniform3fv(reverseLightDirectionLocation, normalize([0.5, 0.7, 1]));
 	gl.drawArrays(gl.TRIANGLES, 0, 36);
 	
@@ -153,6 +182,7 @@ function drawFrame(){
 	M.scaleMatrix = model.makeScale(1.0, 1.0, 1.0);
 	var matrix = MVPmatrix(M, VP);
 	gl.uniformMatrix4fv(MVPuniform, false, matrix);
+	gl.uniform1i(lightingLocation, light);
 	gl.uniform3fv(reverseLightDirectionLocation, normalize([0.5, 0.7, 1]));
 	gl.drawArrays(gl.LINES, 0, 24);
 	
@@ -163,6 +193,7 @@ function drawFrame(){
 	setColorAttribute(gl, vertexColorAttribute, colorBuffer);
 	setNormalAttribute(gl, vertexNormalAttribute, normalBuffer);
 	gl.uniformMatrix4fv(MVPuniform, false, matrix);
+	gl.uniform1i(lightingLocation, light);
 	gl.uniform3fv(reverseLightDirectionLocation, normalize([0.5, 0.7, 1]));
 	gl.drawArrays(gl.TRIANGLES, 0, 36);
 	
@@ -173,6 +204,7 @@ function drawFrame(){
 	setColorAttribute(gl, vertexColorAttribute, colorBuffer);
 	setNormalAttribute(gl, vertexNormalAttribute, normalBuffer);
 	gl.uniformMatrix4fv(MVPuniform, false, matrix);
+	gl.uniform1i(lightingLocation, light);
 	gl.uniform3fv(reverseLightDirectionLocation, normalize([0.5, 0.7, 1]));
 	gl.drawArrays(gl.TRIANGLES, 0, 36);
 	
@@ -183,6 +215,7 @@ function drawFrame(){
 	setColorAttribute(gl, vertexColorAttribute, colorBuffer);
 	setNormalAttribute(gl, vertexNormalAttribute, normalBuffer);
 	gl.uniformMatrix4fv(MVPuniform, false, matrix);
+	gl.uniform1i(lightingLocation, light);
 	gl.uniform3fv(reverseLightDirectionLocation, normalize([0.5, 0.7, 1]));
 	gl.drawArrays(gl.TRIANGLES, 0, 36);
 	

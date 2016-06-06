@@ -20,6 +20,17 @@ background-color: rgba(0.0, 0.0, 0.0, 0.5);
 border-radius: 10px;
 padding: 10px;
 }
+.effectPanel {
+position: absolute;
+top: 10px;
+left: 700px;
+z-index: 2;
+color: gray;
+font-family: san-serif;
+background-color: rgba(0.0, 0.0, 0.0, 0.5);
+border-radius: 10px;
+padding: 10px;
+}
 div.title{
 font-weight: bold;
 }
@@ -37,6 +48,12 @@ the browser do not support WebGL!
 <div class ="title">Camera Setting</div>
 <div id="rotating" style = "color: red">Auto Camera</div>
 <div id="free">Free Camera</div>
+</div>
+<div class = "effectPanel">
+<div class = "title">Light</div>
+<div id = "no_light" style = "color: red">No Light</div>
+<div id = "direct_light">Direct Light</div>
+<div id = "point_light">Point Light</div>
 </div>
 <div id="cameraX"></div>
 <div id="cameraY"></div>
@@ -61,11 +78,12 @@ the browser do not support WebGL!
 	varying lowp vec4 aFragmentColor;
 	varying lowp vec3 aFragmentNormal;
 	uniform vec3 reverseLightDirection;
+	uniform int lightMode;
 	void main(){
 		vec3 normal = normalize(aFragmentNormal);
 		float light = dot(normal, reverseLightDirection);
 		gl_FragColor = aFragmentColor;
-		gl_FragColor.rgb *= light;
+		if(lightMode == 1) {gl_FragColor.rgb *= light;}
 	}
 </script>
 </body>
