@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>library experiment</title>
+<script src="app.js"></script>
+<script src="matrix.js"></script>
+<script src="objectGenerator.js"></script>
+<script src="setBuffer.js"></script>
+<script src="shaderLoad.js"></script>
+<script src="camera.js"></script>
+<style>
+.control_panal {
+position: absolute;
+top: 10px;
+left: 10px;
+z-index: 2;
+color: gray;
+font-family: san-serif;
+background-color: rgba(0, 0, 0, 0.5);
+border-radius: 10px;
+padding: 10px;
+}
+.effectPanel {
+position: absolute;
+top: 10px;
+left: 700px;
+z-index: 2;
+color: gray;
+font-family: san-serif;
+background-color: rgba(0, 0, 0, 0.5);
+border-radius: 10px;
+padding: 10px;
+}
+div.title{
+font-weight: bold;
+}
+</style>
+</head>
+
+<body onload = "Main()">
+<canvas id = "mainWindow" height = "600" width = "800" tabindex='1'>
+the browser do not support WebGL!
+</canvas>
+<div class="control_panal">
+<div class = "title" >Display Mode</div>
+<div id="building" style = "color: red">3D Model</div>
+<div id="framework">Frame</div>
+<div class ="title">Camera Setting</div>
+<div id="rotating" style = "color: red">Auto Camera</div>
+<div id="free">Free Camera</div>
+</div>
+<div class = "effectPanel">
+<div class = "title">Light</div>
+<div id = "no_light" style = "color: red">No Light</div>
+<div id = "direct_light">Direct Light</div>
+<div id = "point_light">Point Light</div>
+</div>
+<div id = "light_control">
+<div id = "light_control_mode">N/A</div>
+<div id = "inputbox">
+x:<input type = "text" id = "input_x"><br>
+y:<input type = "text" id = "input_y"><br>
+z:<input type = "text" id = "input_z"><br>
+<button onclick = "lightControl()">confrim</button>
+</div>
+<div id="cameraX"></div>
+<div id="cameraY"></div>
+<!--vertex shader-->
+<script id = "shadow_vertex" type = "x-shader/x-vertex">
+	attribute vec3 aVertexPosition;
+	uniform mat4 u_matrix;
+	void main(){
+		gl_Position = u_matrix * vec4(aVertexPosition, 1);
+	}
+</script>
+
+<script id = "vertex_shader" type = "x-shader/x-vertex">
+	attribute vec3 aVertexPosition;
+	attribute vec4 aVertexColor;
+	attribute vec3 aVertexNormal;
+	uniform mat4 world;
+	uniform mat4 u_matrix;
+	uniform vec3 pointLight;
+	uniform mat4 u_worldInverseTranspose;
+	varying lowp vec4 aFragmentColor;
+	varying lowp vec3 aFragmentNormal;
+	varying lowp vec3 aSurfaceToLight;
+	void main() {
+		gl_Position = u_matrix * vec4(aVertexPosition,1);
+		aFragmentColor = aVertexColor;
+		aFragmentNormal = mat3(u_worldInverseTranspose) * aVertexNormal;
+		
+		aSurfaceToLight = (world * vec4(pointLight, 1)).xyz - (world * vec4(aVertexPosition, 1)).xyz;
+	}
+</script>
+
+<!--fragment shader-->
+<script id = "shadow_fragment" type = "x-shader/x-fragment">
+
+</script>
+
+<script id = "fragment_shader" type = "x-shader/x-fragment">
+	precision mediump float;
+	varying lowp vec4 aFragmentColor;
+	varying lowp vec3 aFragmentNormal;
+	varying lowp vec3 aSurfaceToLight;
+	uniform vec3 reverseLightDirection;
+	uniform int lightMode;
+	void main(){
+		vec3 normal = normalize(aFragmentNormal);
+		gl_FragColor = aFragmentColor;
+		if(lightMode == 1) {
+			float light = dot(normal, reverseLightDirection);
+			if(light < 0.0) light = 0.0;
+			gl_FragColor.rgb *= light;
+			gl_FragColor.rgb += aFragmentColor.xyz * 0.3;
+		}
+		if(lightMode == 2){
+			vec3 surfaceToLightDirection = normalize(aSurfaceToLight);
+			float light = dot(normal, surfaceToLightDirection);
+			if(light < 0.0) light = 0.0;  //avoid negative light parameter;
+			gl_FragColor.rgb *= light;
+			gl_FragColor.rgb += aFragmentColor.xyz * 0.3; //make diffuse reflection
+		}
+	}
+</script>
+</body>
+</html>
