@@ -24,8 +24,10 @@ var framecolor = new Array();
 
 var VP, M;
 
-var time = 0;
-var rotating = 1;
+var _time = 0;
+var _rotating = 1;
+var _lightDirection = [1, 0, 0];
+var _lightPosition = [0, 0, 0];
 var light = 0;
 function Main(){
 	var canvas = document.getElementById("mainWindow");
@@ -87,7 +89,6 @@ function Main(){
 	
 	lightModeLocation = gl.getUniformLocation(shaderProgram, "lightMode");
 	
-
 	document.getElementById("building").addEventListener("click", draw3D);
 	document.getElementById("framework").addEventListener("click", drawF);
 	document.getElementById("rotating").addEventListener("click", autoCamera);
@@ -111,11 +112,31 @@ function initWebGL(canvas){
 
 	return gl;
 }
+
+function lightControl(){
+	if(document.getElementById("light_control").innerHTML == "N/A")
+		return;
+	else if(document.getElementById("light_control_mode").innerHTML == "light direction"){
+		_lightDirection[0] = -document.getElementById("input_x").value;
+		_lightDirection[1] = -document.getElementById("input_y").value;
+		_lightDirection[2] = -document.getElementById("input_z").value;
+		return;
+	}
+	else if(document.getElementById("light_control_mode").innerHTML == "light position"){
+		_lightPosition[0] = document.getElementById("input_x").value;
+		_lightPosition[1] = document.getElementById("input_y").value;
+		_lightPosition[2] = document.getElementById("input_z").value;
+		return;
+
+	}
+}
+  
 function noLight(){
 	if(document.getElementById("no_light").style.color == "red") return;
 	document.getElementById("no_light").style.color = "red";
 	document.getElementById("direct_light").style.color = "gray";
 	document.getElementById("point_light").style.color = "gray";
+	document.getElementById("light_control_mode").innerHTML = "N/A";
 	light = 0;
 }
 function directLight(){
@@ -123,6 +144,7 @@ function directLight(){
 	document.getElementById("direct_light").style.color = "red";
 	document.getElementById("no_light").style.color = "gray";
 	document.getElementById("point_light").style.color = "gray";
+	document.getElementById("light_control_mode").innerHTML = "light direction";
 	light = 1;
 }
 function pointLight(){
@@ -130,6 +152,7 @@ function pointLight(){
 	document.getElementById("point_light").style.color = "red";
 	document.getElementById("no_light").style.color = "gray";
 	document.getElementById("direct_light").style.color = "gray";
+	document.getElementById("light_control_mode").innerHTML = "light position";
 	light = 2;
 }
 function draw3D(){
@@ -147,8 +170,8 @@ function drawF(){
 }
 function draw3Dmodel(){
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFRT_BIT);
-	time = time + 1;
-	if(time == 360) time = 0;
+	_time = _time + 1;
+	if(_time == 360) _time = 0;
 	verticeBuffer = setBuffer(gl, objects[0]);
 	colorBuffer = setBuffer(gl, color[0]);
 	normalBuffer = setBuffer(gl, normal[0]);
@@ -159,13 +182,13 @@ function draw3Dmodel(){
 	M.translationMatrix =
 	  model.makeTranslation(0.0, 0.0, 0.0);
 	M.rotationXMatrix = model.makeXRotation(0);
-	M.rotationYMatrix = model.makeYRotation(rotating * Math.PI * time / 180);
+	M.rotationYMatrix = model.makeYRotation(_rotating * Math.PI * _time / 180);
 	M.rotationZMatrix = model.makeZRotation(0);
 	M.scaleMatrix = model.makeScale(1.0, 1.0, 1.0);
 	var matrix = MVPmatrix(M, VP);
 	gl.uniformMatrix4fv(MVPuniform, false, matrix);
 	gl.uniform1i(lightModeLocation, light);
-	gl.uniform3fv(reverseLightDirectionLocation, normalize([0.5, 0.7, 1]));
+	gl.uniform3fv(reverseLightDirectionLocation, normalize(_lightDirection));
 	gl.drawArrays(gl.TRIANGLES, 0, 36);
 	
 	if(document.getElementById("building").style.color=="gray"){
@@ -176,8 +199,8 @@ function draw3Dmodel(){
 }
 function drawFrame(){
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFRT_BIT);
-	time = time + 1;
-	if(time == 360) time = 0;
+	_time = _time + 1;
+	if(_time == 360) _time = 0;
 	//VP
 	verticeBuffer = setBuffer(gl, framework[0]);
 	colorBuffer = setBuffer(gl, framecolor[0]);
@@ -187,7 +210,7 @@ function drawFrame(){
 	M.translationMatrix =
 	  model.makeTranslation(0.0, 0.0, 0.0);
 	M.rotationXMatrix = model.makeXRotation(0);
-	M.rotationYMatrix = model.makeYRotation(rotating * Math.PI * time / 180);
+	M.rotationYMatrix = model.makeYRotation(_rotating * Math.PI * _time / 180);
 	M.rotationZMatrix = model.makeZRotation(0);
 	M.scaleMatrix = model.makeScale(1.0, 1.0, 1.0);
 	var matrix = MVPmatrix(M, VP);
@@ -198,7 +221,7 @@ function drawFrame(){
 	gl.uniformMatrix4fv(Worlduniform, false, worldMatrix);
 	gl.uniformMatrix4fv(worldInverseTransposeLocation, false, worldInverseTransposeMatrix);
 	gl.uniform1i(lightModeLocation, light);
-	gl.uniform3fv(reverseLightDirectionLocation, normalize([0.5, 0.7, 1]));
+	gl.uniform3fv(reverseLightDirectionLocation, normalize(_lightDirection));
 	gl.drawArrays(gl.LINES, 0, 24);
 	
 	for(i = 1; i < objects.length; i++){
@@ -211,8 +234,8 @@ function drawFrame(){
 		gl.uniformMatrix4fv(MVPuniform, false, matrix);
 		gl.uniformMatrix4fv(Worlduniform, false, worldMatrix);
 		gl.uniform1i(lightModeLocation, light);
-		gl.uniform3fv(reverseLightDirectionLocation, normalize([0.5, 0.7, 1]));
-		gl.uniform3fv(pointLightLocation, [0, 0.25, 0]);
+		gl.uniform3fv(reverseLightDirectionLocation, normalize(_lightDirection));
+		gl.uniform3fv(pointLightLocation, _lightPosition);
 		gl.drawArrays(gl.TRIANGLES, 0, 36);
 	}
 	

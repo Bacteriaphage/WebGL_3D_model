@@ -18,7 +18,7 @@ function initCamera(){
 		view_rotationXMatrix : view.makeXRotation(-Math.PI * degreeX / 180),
 		view_rotationYMatrix : view.makeYRotation(0),
 		view_rotationZMatrix : view.makeZRotation(0),
-		projectionMatrix : make2DProjection(Math.PI * 90/180, 600/480, 0.1, 50.0)
+		projectionMatrix : make2DProjection(Math.PI * 108/180, 600/480, 0.01, 50.0)
 	};
 	M = {
 		translationMatrix : null,
@@ -33,14 +33,14 @@ function autoCamera(){
 	document.getElementById("free").style.color = "gray";
 	document.getElementById("mainWindow").removeEventListener("mousedown", startMove);
 	document.getElementById("mainWindow").removeEventListener("mouseup", endMove);
-	rotating = 1;
+	_rotating = 1;
 	return;
 }
 
 function freeCamera(){
 	document.getElementById("rotating").style.color = "gray";
 	document.getElementById("free").style.color = "red";
-	rotating = 0;
+	_rotating = 0;
 	document.getElementById("mainWindow").addEventListener("mousedown", startMove);
 	console.log("push done");
 	document.getElementById("mainWindow").addEventListener("mouseup", endMove);
