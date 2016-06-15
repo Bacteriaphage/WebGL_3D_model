@@ -96,7 +96,12 @@ z:<input type = "text" id = "input_z"><br>
 
 <!--fragment shader-->
 <script id = "shadow_fragment" type = "x-shader/x-fragment">
-
+	#ifdef GL_ES
+	precision mediump float;
+	#endif
+	void main(){
+		gl_FragColor = vec4(gl_FragCoord.z, 0.0, 0.0, 0.0);
+	}
 </script>
 
 <script id = "fragment_shader" type = "x-shader/x-fragment">

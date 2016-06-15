@@ -29,6 +29,7 @@ var _rotating = 1;
 var _lightDirection = [1, 0, 0];
 var _lightPosition = [0, 0, 0];
 var light = 0;
+var OFFSCREEN_WIDTH = 2048, OFFSCREEN_HEIGHT = 2048;
 function Main(){
 	var canvas = document.getElementById("mainWindow");
 	console.log("load successfully!");
@@ -40,22 +41,11 @@ function Main(){
 		gl.depthFunc(gl.LEQUAL);
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 	}
-	var fragmentShader = getShader(gl, "fragment_shader");
-	var vertexShader = getShader(gl, "vertex_shader");
-
-	//create a program
 	
-	var normalProgram = gl.createProgram();
-	gl.attachShader(normalProgram, vertexShader);
-	gl.attachShader(normalProgram, fragmentShader);
-	gl.linkProgram(normalProgram);
-
-	if(!gl.getProgramParameter(normalProgram, gl.LINK_STATUS)){
-		alert("Unable to initialize shaders.");
-	}
-	gl.useProgram(normalProgram);
+	//gl.useProgram(normalProgram);
 	
 	initCamera();
+	
 	objects[0] = generateObj.cuboid(-0.2, 0.0, 0.2, 0.4, 0.4, 0.9);
 	objects[1] = generateObj.cuboid(-0.2, 0.0, 0.1, 0.2, 0.2, 0.2);
 	objects[2] = generateObj.cuboid(-0.2, 0.3, 0.2, 0.4, 0.4, 0.01);
@@ -70,25 +60,48 @@ function Main(){
 	normal[1] = generateNormal.cuboid(-0.2, 0.0, 0.1, 0.2, 0.2, 0.2);
 	normal[2] = generateNormal.cuboid(-0.2, 0.3, 0.2, 0.4, 0.4, 0.01);
 	normal[3] = generateNormal.cuboid(-0.2, 0.6, 0.2, 0.4, 0.4, 0.01);
-	vertexPositionAttribute = gl.getAttribLocation(normalProgram, "aVertexPosition");
-//	gl.enableVertexAttribArray(vertexPositionAttribute);
+	//Initialize shader for shadow map
+	var shadowVertex = getShader(gl, "shadow_vertex");
+	var shadowFragment = getShader(gl, "shadow_fragment");
+	var shadowProgram = gl.createProgram();
+	gl.attachShader(shadowProgram, shadowVertex);
+	gl.attachShader(shadowProgram, shadowFragment);
+	gl.linkProgram(shadowProgram);
+	if(!gl.getProgramParameter(shadowProgram, gl.LINK_STATUS)){
+		alert("Unable to initialize shaders.");
+	}
+	shaderProgram.a_Position = gl.getAttribLocation(shadowProgram, "aVertexPosition");
+	shaderProgram.u_MvpMatrix = gl.getAttribLocation(shadowProgram, "u_matrix");
 	
-	vertexColorAttribute = gl.getAttribLocation(normalProgram, "aVertexColor");
-//	gl.enableVertexAttribArray(vertexColorAttribute);
+	//Initialize shader for regular drawing
+	var fragmentShader = getShader(gl, "fragment_shader");
+	var vertexShader = getShader(gl, "vertex_shader");
+	var normalProgram = gl.createProgram();
+	gl.attachShader(normalProgram, vertexShader);
+	gl.attachShader(normalProgram, fragmentShader);
+	gl.linkProgram(normalProgram);
 
+	if(!gl.getProgramParameter(normalProgram, gl.LINK_STATUS)){
+		alert("Unable to initialize shaders.");
+	}
+	vertexPositionAttribute = gl.getAttribLocation(normalProgram, "aVertexPosition");
+	vertexColorAttribute = gl.getAttribLocation(normalProgram, "aVertexColor");
 	vertexNormalAttribute = gl.getAttribLocation(normalProgram, "aVertexNormal");
-	
 	MVPuniform = gl.getUniformLocation(normalProgram, "u_matrix");
-	
 	Worlduniform = gl.getUniformLocation(normalProgram, "world");
-	
 	reverseLightDirectionLocation = gl.getUniformLocation(normalProgram, "reverseLightDirection");
-	
 	pointLightLocation = gl.getUniformLocation(normalProgram, "pointLight")
-	
 	worldInverseTransposeLocation = gl.getUniformLocation(normalProgram, "u_worldInverseTranspose");
-	
 	lightModeLocation = gl.getUniformLocation(normalProgram, "lightMode");
+	
+	//Initialize framebuffer objects
+	var fbo = initFramebufferObject(gl);
+	if (!fbo) {
+		console.log('Failed to initialize frame buffer object');
+		return;
+	}
+	gl.activeTexture(gl.TEXTURE0); // Set a texture object to the texture unit
+	gl.bindTexture(gl.TEXTURE_2D, fbo.texture);
 	
 	document.getElementById("building").addEventListener("click", draw3D);
 	document.getElementById("framework").addEventListener("click", drawF);
