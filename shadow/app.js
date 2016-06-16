@@ -22,7 +22,7 @@ var normal = new Array();
 var framework = new Array();
 var framecolor = new Array();
 
-var VP, M;
+var VP, lightVP, M;
 
 var _time = 0;
 var _rotating = 1;

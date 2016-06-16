@@ -108,3 +108,13 @@ function cameraMove(event){
 	document.getElementById("cameraX").innerHTML = currentX;
 	document.getElementById("cameraY").innerHTML = currentY;
 }
+
+function cameraFromLight(x, y, z){
+	lightVP = {
+		view_translationMatrix : view.makeTranslation(x, y, z),
+		view_rotationXMatrix : view.makeXRotation(-Math.PI * degreeX / 180),
+		view_rotationYMatrix : view.makeYRotation(0),
+		view_rotationZMatrix : view.makeZRotation(0),
+		projectionMatrix : make2DProjection(Math.PI * 108/180, 600/480, 0.01, 50.0)
+	};
+}
