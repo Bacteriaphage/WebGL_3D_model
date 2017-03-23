@@ -1,20 +1,12 @@
 var gl;
 
-var vertexPositionAttribute;
-var vertexColorAttribute;
-var vertexNormalAttribute;
-var texcoordAttribute;
+var normalProgram;
+var shadowProgram;
 
 var verticeBuffer;
 var colorBuffer;
 var normalBuffer;
-
-var MVPuniform;
-var Worlduniform;
-var reverseLightDirectionLocation;
-var pointLightLocation;
-var lightModeLocation;
-var worldInverseTransposeLocation;  
+var fbo;
 
 var objects = new Array();
 var color = new Array();
@@ -48,13 +40,13 @@ function Main(){
 	
 	objects[0] = generateObj.cuboid(-0.2, 0.0, 0.2, 0.4, 0.4, 0.9);
 	objects[1] = generateObj.cuboid(-0.2, 0.0, 0.1, 0.2, 0.2, 0.2);
-	objects[2] = generateObj.cuboid(-0.2, 0.3, 0.2, 0.4, 0.4, 0.01);
-	objects[3] = generateObj.cuboid(-0.2, 0.6, 0.2, 0.4, 0.4, 0.01);
+	objects[2] = generateObj.cuboid(-0.4, 0.3, 0.4, 0.8, 0.8, 0.01);
+	objects[3] = generateObj.cuboid(-0.2, 0.4, 0.2, 0.4, 0.4, 0.01);
 	framework[0] = generateObj.framework(-0.2, 0.0, 0.2, 0.4, 0.4, 0.9);
 	color[0] = generateColor.cuboid(1.0, 0.5, 0.4, 1.0);
 	color[1] = generateColor.cuboid(0.5, 0.8, 0.2, 1.0);
-	color[2] = generateColor.cuboid(1.0, 1.0, 1.0, 1.0);
-	color[3] = generateColor.cuboid(1.0, 1.0, 1.0, 1.0);
+	color[2] = generateColor.cuboid(0.6, 0.7, 1.0, 1.0);
+	color[3] = generateColor.cuboid(0.9, 0.5, 0.5, 1.0);
 	framecolor[0] = generateColor.framework(1.0, 1.0, 1.0, 1.0);
 	normal[0] = generateNormal.cuboid(-0.2, 0.0, 0.2, 0.4, 0.4, 0.9);
 	normal[1] = generateNormal.cuboid(-0.2, 0.0, 0.1, 0.2, 0.2, 0.2);
@@ -63,45 +55,46 @@ function Main(){
 	//Initialize shader for shadow map
 	var shadowVertex = getShader(gl, "shadow_vertex");
 	var shadowFragment = getShader(gl, "shadow_fragment");
-	var shadowProgram = gl.createProgram();
+	shadowProgram = gl.createProgram();
 	gl.attachShader(shadowProgram, shadowVertex);
 	gl.attachShader(shadowProgram, shadowFragment);
 	gl.linkProgram(shadowProgram);
 	if(!gl.getProgramParameter(shadowProgram, gl.LINK_STATUS)){
 		alert("Unable to initialize shaders.");
 	}
-	shaderProgram.a_Position = gl.getAttribLocation(shadowProgram, "aVertexPosition");
-	shaderProgram.u_MvpMatrix = gl.getAttribLocation(shadowProgram, "u_matrix");
+	shadowProgram.a_Position = gl.getAttribLocation(shadowProgram, "aVertexPosition");
+	shadowProgram.u_MvpMatrix = gl.getUniformLocation(shadowProgram, "u_matrix");
 	
 	//Initialize shader for regular drawing
 	var fragmentShader = getShader(gl, "fragment_shader");
 	var vertexShader = getShader(gl, "vertex_shader");
-	var normalProgram = gl.createProgram();
+	normalProgram = gl.createProgram();
 	gl.attachShader(normalProgram, vertexShader);
 	gl.attachShader(normalProgram, fragmentShader);
 	gl.linkProgram(normalProgram);
-
 	if(!gl.getProgramParameter(normalProgram, gl.LINK_STATUS)){
 		alert("Unable to initialize shaders.");
 	}
-	vertexPositionAttribute = gl.getAttribLocation(normalProgram, "aVertexPosition");
-	vertexColorAttribute = gl.getAttribLocation(normalProgram, "aVertexColor");
-	vertexNormalAttribute = gl.getAttribLocation(normalProgram, "aVertexNormal");
-	MVPuniform = gl.getUniformLocation(normalProgram, "u_matrix");
-	Worlduniform = gl.getUniformLocation(normalProgram, "world");
-	reverseLightDirectionLocation = gl.getUniformLocation(normalProgram, "reverseLightDirection");
-	pointLightLocation = gl.getUniformLocation(normalProgram, "pointLight")
-	worldInverseTransposeLocation = gl.getUniformLocation(normalProgram, "u_worldInverseTranspose");
-	lightModeLocation = gl.getUniformLocation(normalProgram, "lightMode");
-	
+	normalProgram.vertexPositionAttribute = gl.getAttribLocation(normalProgram, "aVertexPosition");
+	normalProgram.vertexColorAttribute = gl.getAttribLocation(normalProgram, "aVertexColor");
+	normalProgram.vertexNormalAttribute = gl.getAttribLocation(normalProgram, "aVertexNormal");
+	normalProgram.MVPuniform = gl.getUniformLocation(normalProgram, "u_matrix");
+	normalProgram.Worlduniform = gl.getUniformLocation(normalProgram, "world");
+	normalProgram.reverseLightDirectionLocation = gl.getUniformLocation(normalProgram, "reverseLightDirection");
+	normalProgram.pointLightLocation = gl.getUniformLocation(normalProgram, "pointLight")
+	normalProgram.worldInverseTransposeLocation = gl.getUniformLocation(normalProgram, "u_worldInverseTranspose");
+	normalProgram.lightModeLocation = gl.getUniformLocation(normalProgram, "lightMode");
+	normalProgram.MvpMatrixFromLight = gl.getUniformLocation(normalProgram, "MvpMatrixFromLight");
+	normalProgram.u_ShadowMap = gl.getUniformLocation(normalProgram, "u_ShadowMap");
 	//Initialize framebuffer objects
-	var fbo = initFramebufferObject(gl);
+	fbo = initFramebufferObject(gl);
 	if (!fbo) {
 		console.log('Failed to initialize frame buffer object');
 		return;
 	}
 	gl.activeTexture(gl.TEXTURE0); // Set a texture object to the texture unit
 	gl.bindTexture(gl.TEXTURE_2D, fbo.texture);
+	
 	
 	document.getElementById("building").addEventListener("click", draw3D);
 	document.getElementById("framework").addEventListener("click", drawF);
@@ -134,12 +127,14 @@ function lightControl(){
 		_lightDirection[0] = -document.getElementById("input_x").value;
 		_lightDirection[1] = -document.getElementById("input_y").value;
 		_lightDirection[2] = -document.getElementById("input_z").value;
+		cameraFromDirectLight(_lightDirection[0],_lightDirection[1],_lightDirection[2]);
 		return;
 	}
 	else if(document.getElementById("light_control_mode").innerHTML == "light position"){
 		_lightPosition[0] = document.getElementById("input_x").value;
 		_lightPosition[1] = document.getElementById("input_y").value;
 		_lightPosition[2] = document.getElementById("input_z").value;
+		cameraFromPointLight(_lightDirection[0],_lightDirection[1],_lightDirection[2]);
 		return;
 
 	}
@@ -184,14 +179,15 @@ function drawF(){
 }
 function draw3Dmodel(){
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFRT_BIT);
-	_time = _time + 1;
+	gl.useProgram(normalProgram);
+	_time = _time + 0.05;
 	if(_time == 360) _time = 0;
 	verticeBuffer = setBuffer(gl, objects[0]);
 	colorBuffer = setBuffer(gl, color[0]);
 	normalBuffer = setBuffer(gl, normal[0]);
-	setPointAttribute(gl, vertexPositionAttribute, verticeBuffer);
-	setColorAttribute(gl, vertexColorAttribute, colorBuffer);
-	setNormalAttribute(gl, vertexNormalAttribute, normalBuffer);
+	setPointAttribute(gl, normalProgram.vertexPositionAttribute, verticeBuffer);
+	setColorAttribute(gl, normalProgram.vertexColorAttribute, colorBuffer);
+	setNormalAttribute(gl, normalProgram.vertexNormalAttribute, normalBuffer);
 	// Modeling
 	M.translationMatrix =
 	  model.makeTranslation(0.0, 0.0, 0.0);
@@ -203,11 +199,11 @@ function draw3Dmodel(){
 	var worldMatrix = WorldMatrix(M);
 	var worldInverseMatrix = matrix_invert(convert1to2(worldMatrix));
 	var worldInverseTransposeMatrix = makeTranspose(convert2to1(worldInverseMatrix));
-	gl.uniformMatrix4fv(MVPuniform, false, matrix);
-	gl.uniformMatrix4fv(Worlduniform, false, worldMatrix);
-	gl.uniformMatrix4fv(worldInverseTransposeLocation, false, worldInverseTransposeMatrix);
-	gl.uniform1i(lightModeLocation, light);
-	gl.uniform3fv(reverseLightDirectionLocation, normalize(_lightDirection));
+	gl.uniformMatrix4fv(normalProgram.MVPuniform, false, matrix);
+	gl.uniformMatrix4fv(normalProgram.Worlduniform, false, worldMatrix);
+	gl.uniformMatrix4fv(normalProgram.worldInverseTransposeLocation, false, worldInverseTransposeMatrix);
+	gl.uniform1i(normalProgram.lightModeLocation, light);
+	gl.uniform3fv(normalProgram.reverseLightDirectionLocation, normalize(_lightDirection));
 	gl.drawArrays(gl.TRIANGLES, 0, 36);
 	
 	if(document.getElementById("building").style.color=="gray"){
@@ -218,13 +214,14 @@ function draw3Dmodel(){
 }
 function drawFrame(){
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFRT_BIT);
-	_time = _time + 1;
+	gl.useProgram(normalProgram);
+	_time = _time + 0.05;
 	if(_time == 360) _time = 0;
 	//VP
 	verticeBuffer = setBuffer(gl, framework[0]);
 	colorBuffer = setBuffer(gl, framecolor[0]);
-	setPointAttribute(gl, vertexPositionAttribute, verticeBuffer);
-	setColorAttribute(gl, vertexColorAttribute, colorBuffer);
+	setPointAttribute(gl, normalProgram.vertexPositionAttribute, verticeBuffer);
+	setColorAttribute(gl, normalProgram.vertexColorAttribute, colorBuffer);
 	// Modeling
 	M.translationMatrix =
 	  model.makeTranslation(0.0, 0.0, 0.0);
@@ -236,26 +233,46 @@ function drawFrame(){
 	var worldMatrix = WorldMatrix(M);
 	var worldInverseMatrix = matrix_invert(convert1to2(worldMatrix));
 	var worldInverseTransposeMatrix = makeTranspose(convert2to1(worldInverseMatrix));
-	gl.uniformMatrix4fv(MVPuniform, false, matrix);
-	gl.uniformMatrix4fv(Worlduniform, false, worldMatrix);
-	gl.uniformMatrix4fv(worldInverseTransposeLocation, false, worldInverseTransposeMatrix);
-	gl.uniform1i(lightModeLocation, light);
-	gl.uniform3fv(reverseLightDirectionLocation, normalize(_lightDirection));
+	gl.uniformMatrix4fv(normalProgram.MVPuniform, false, matrix);
+	gl.uniformMatrix4fv(normalProgram.Worlduniform, false, worldMatrix);
+	gl.uniformMatrix4fv(normalProgram.worldInverseTransposeLocation, false, worldInverseTransposeMatrix);
+	gl.uniform1i(normalProgram.lightModeLocation, light);
+	gl.uniform3fv(normalProgram.reverseLightDirectionLocation, normalize(_lightDirection));
 	gl.drawArrays(gl.LINES, 0, 24);
 	
+	var shadowMatrix = MVPmatrix(M, lightVP);
+	
+	gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+	gl.viewport(0, 0, OFFSCREEN_WIDTH, OFFSCREEN_HEIGHT);
+	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFRT_BIT);
+	gl.useProgram(shadowProgram);
+	for(i = 1; i < objects.length; i++){
+		verticeBuffer = setBuffer(gl, objects[i]);
+		setPointAttribute(gl, shadowProgram.a_Position, verticeBuffer);
+		gl.uniformMatrix4fv(shadowProgram.u_MvpMatrix, false, shadowMatrix);
+		gl.drawArrays(gl.TRIANGLES, 0, 36);
+	}
+	
+	
+	gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+	gl.viewport(0, 0, 800, 600); 
+	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);   
+	gl.useProgram(normalProgram);
 	for(i = 1; i < objects.length; i++){
 		verticeBuffer = setBuffer(gl, objects[i]);
 		colorBuffer = setBuffer(gl, color[i]);
 		normalBuffer = setBuffer(gl, normal[i]);
-		setPointAttribute(gl, vertexPositionAttribute, verticeBuffer);
-		setColorAttribute(gl, vertexColorAttribute, colorBuffer);
-		setNormalAttribute(gl, vertexNormalAttribute, normalBuffer);
-		gl.uniformMatrix4fv(MVPuniform, false, matrix);
-		gl.uniformMatrix4fv(Worlduniform, false, worldMatrix);
-		gl.uniformMatrix4fv(worldInverseTransposeLocation, false, worldInverseTransposeMatrix);
-		gl.uniform1i(lightModeLocation, light);
-		gl.uniform3fv(reverseLightDirectionLocation, normalize(_lightDirection));
-		gl.uniform3fv(pointLightLocation, _lightPosition);
+		setPointAttribute(gl, normalProgram.vertexPositionAttribute, verticeBuffer);
+		setColorAttribute(gl, normalProgram.vertexColorAttribute, colorBuffer);
+		setNormalAttribute(gl, normalProgram.vertexNormalAttribute, normalBuffer);
+		gl.uniformMatrix4fv(normalProgram.MVPuniform, false, matrix);
+		gl.uniformMatrix4fv(normalProgram.Worlduniform, false, worldMatrix);
+		gl.uniformMatrix4fv(normalProgram.worldInverseTransposeLocation, false, worldInverseTransposeMatrix);
+		gl.uniform1i(normalProgram.lightModeLocation, light);
+		gl.uniform3fv(normalProgram.reverseLightDirectionLocation, normalize(_lightDirection));
+		gl.uniform3fv(normalProgram.pointLightLocation, _lightPosition);
+		gl.uniform1i(normalProgram.u_ShadowMap, 0);
+		gl.uniformMatrix4fv(normalProgram.MvpMatrixFromLight, false, shadowMatrix);
 		gl.drawArrays(gl.TRIANGLES, 0, 36);
 	}
 	

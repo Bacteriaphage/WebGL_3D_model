@@ -14,11 +14,11 @@ var cameraCoor = {
 };
 function initCamera(){
 	VP = {
-		view_translationMatrix : view.makeTranslation(0.0, 0.5, 1.0),
-		view_rotationXMatrix : view.makeXRotation(-Math.PI * degreeX / 180),
+		view_translationMatrix : view.makeTranslation(0.0, 0.9, 0.5),
+		view_rotationXMatrix : view.makeXRotation(-0.3 * Math.PI),
 		view_rotationYMatrix : view.makeYRotation(0),
 		view_rotationZMatrix : view.makeZRotation(0),
-		projectionMatrix : make2DProjection(Math.PI * 108/180, 600/480, 0.01, 50.0)
+		projectionMatrix : make2DProjection(Math.PI * 60/180, 800/600, 0.01, 50.0)
 	};
 	M = {
 		translationMatrix : null,
@@ -26,6 +26,13 @@ function initCamera(){
 		rotationYMatrix : null,
 		rotationZMatrix : null,
 		scaleMatrix : null
+	};
+	lightVP = {
+		view_translationMatrix : view.makeTranslation(0.0, 0.9, 0.5),
+		view_rotationXMatrix : view.makeXRotation(-0.3 * Math.PI),
+		view_rotationYMatrix : view.makeYRotation(0),
+		view_rotationZMatrix : view.makeZRotation(0),
+		projectionMatrix : make2DProjection(Math.PI * 60/180, OFFSCREEN_WIDTH/OFFSCREEN_HEIGHT, 0.01, 50.0)
 	};
 }
 function autoCamera(){
@@ -109,12 +116,21 @@ function cameraMove(event){
 	document.getElementById("cameraY").innerHTML = currentY;
 }
 
-function cameraFromLight(x, y, z){
+function cameraFromDirectLight(x, y, z){
 	lightVP = {
 		view_translationMatrix : view.makeTranslation(x, y, z),
-		view_rotationXMatrix : view.makeXRotation(-Math.PI * degreeX / 180),
+		view_rotationXMatrix : view.makeXRotation(Math.atan2(y, z)),
+		view_rotationYMatrix : view.makeYRotation(-0.5 * Math.PI + Math.atan2(z, x)),
+		view_rotationZMatrix : view.makeZRotation(-Math.PI - Math.atan2(y, x)),
+		projectionMatrix : identity()
+	};
+}
+function cameraFromPointLight(x, y, z){
+	lightVP = {
+		view_translationMatrix : view.makeTranslation(x, y, z),
+		view_rotationXMatrix : view.makeXRotation(0.5 * Math.PI),
 		view_rotationYMatrix : view.makeYRotation(0),
 		view_rotationZMatrix : view.makeZRotation(0),
-		projectionMatrix : make2DProjection(Math.PI * 108/180, 600/480, 0.01, 50.0)
+		projectionMatrix : make2DProjection(Math.PI * 108/180, OFFSCREEN_WIDTH/OFFSCREEN_HEIGHT, 0.01, 50.0)
 	};
 }

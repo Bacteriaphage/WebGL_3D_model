@@ -82,14 +82,16 @@ z:<input type = "text" id = "input_z"><br>
 	uniform mat4 u_matrix;
 	uniform vec3 pointLight;
 	uniform mat4 u_worldInverseTranspose;
+	uniform mat4 MvpMatrixFromLight;
 	varying lowp vec4 aFragmentColor;
 	varying lowp vec3 aFragmentNormal;
 	varying lowp vec3 aSurfaceToLight;
+	varying lowp vec4 v_PositionFromLight;
 	void main() {
 		gl_Position = u_matrix * vec4(aVertexPosition,1);
 		aFragmentColor = aVertexColor;
 		aFragmentNormal = mat3(u_worldInverseTranspose) * aVertexNormal;
-		
+		v_PositionFromLight = MvpMatrixFromLight * vec4(aVertexPosition,1);
 		aSurfaceToLight = (world * vec4(pointLight, 1)).xyz - (world * vec4(aVertexPosition, 1)).xyz;
 	}
 </script>
@@ -105,27 +107,40 @@ z:<input type = "text" id = "input_z"><br>
 </script>
 
 <script id = "fragment_shader" type = "x-shader/x-fragment">
+	#ifdef GL_ES
 	precision mediump float;
+	#endif
 	varying lowp vec4 aFragmentColor;
 	varying lowp vec3 aFragmentNormal;
 	varying lowp vec3 aSurfaceToLight;
+	varying lowp vec4 v_PositionFromLight;
 	uniform vec3 reverseLightDirection;
+	uniform sampler2D u_ShadowMap;
 	uniform int lightMode;
 	void main(){
 		vec3 normal = normalize(aFragmentNormal);
 		gl_FragColor = aFragmentColor;
 		if(lightMode == 1) {
+			vec3 shadowCoord = (v_PositionFromLight.xyz/v_PositionFromLight.w)/2.0 + 0.5;
+			vec4 rgbaDepth = texture2D(u_ShadowMap, shadowCoord.xy);
+			float depth = rgbaDepth.r;
+			float visibility = (shadowCoord.z > depth + 0.005) ? 0.2 : 1.0;
 			float light = dot(normal, reverseLightDirection);
 			if(light < 0.0) light = 0.0;
-			gl_FragColor.rgb *= light;
-			gl_FragColor.rgb += aFragmentColor.xyz * 0.3;
+			gl_FragColor = vec4(aFragmentColor.rgb * visibility, aFragmentColor.a);
+	//		gl_FragColor.rgb *= light;
 		}
 		if(lightMode == 2){
+			vec3 shadowCoord = (v_PositionFromLight.xyz/v_PositionFromLight.w)/2.0 + 0.5;
+			vec4 rgbaDepth = texture2D(u_ShadowMap, shadowCoord.xy);
+			float depth = rgbaDepth.r;
+			float visibility = (shadowCoord.z > depth + 0.005) ? 0.2 : 1.0;
 			vec3 surfaceToLightDirection = normalize(aSurfaceToLight);
 			float light = dot(normal, surfaceToLightDirection);
 			if(light < 0.0) light = 0.0;  //avoid negative light parameter;
-			gl_FragColor.rgb *= light;
-			gl_FragColor.rgb += aFragmentColor.xyz * 0.3; //make diffuse reflection
+			
+			gl_FragColor = vec4(aFragmentColor.rgb * visibility, aFragmentColor.a);
+	//		gl_FragColor.rgb *= light;
 		}
 	}
 </script>
